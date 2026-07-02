@@ -280,7 +280,6 @@ The following notes are for contributors and maintainers during the maintenance 
 
 - This project uses [ffmpeg](https://github.com/FFmpeg/FFmpeg) under the **GPL license** and [Real-ESRGAN](https://github.com/xinntao/Real-ESRGAN) under the **BSD license**.
 - Since ffmpeg uses GPL, the GPL copyleft clause must be considered when distributing; Real-ESRGAN uses BSD, and copyright notices must be retained.
-- **It is recommended to add a `LICENSE` file in the repository root** to clarify the license of this project (currently `copyright.vue` states "open source, free, non-commercial"; it is recommended to add a formal LICENSE text, such as CC BY-NC 4.0 or a license compatible with upstream).
 - Secondary development for commercial use is allowed, but the author assumes no responsibility for the consequences of secondary development.
 
 ### 2. Large Files and Binary Management
@@ -345,7 +344,6 @@ This software is **open source, free, and non-commercial**. It is for learning a
 
 - This software uses [ffmpeg](https://github.com/FFmpeg/FFmpeg) under the GPL license and [Real-ESRGAN](https://github.com/xinntao/Real-ESRGAN) under the BSD license, both of which are open-source and commercial-friendly licenses.
 - This software allows secondary development for commercial use, but the author assumes no responsibility for the consequences of secondary development.
-- **It is recommended to add a formal `LICENSE` file to the repository root** to clarify the licensing terms.
 
 > Project URL: <https://github.com/wann-he/TataRepair>
 
