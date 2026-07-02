@@ -61,6 +61,15 @@ const router = createRouter({
                 });
             }
         },
+        {
+            path: '/img-convert',
+            component: () => import('../components/img-convert.vue'),
+            beforeEnter: async (to, from, next) => {
+                next(vm => {
+                    vm.$forceUpdate(); // 强制更新组件
+                });
+            }
+        },
     ],
 })
 

@@ -69,8 +69,36 @@ svg {
   //}
 }
 
+.drop-area {
+  border: 1px dashed #ccc;
+  padding: 10px;
+  border-radius: 15px;
+}
+
+.drag-over {
+  border-color: #4caf50;
+  background-color: #f0f8ff;
+}
+
+.right-top-icon-container {
+  display: flex;
+  justify-content: flex-end;
+  position: absolute;
+  top: 10px; /* 距离顶部的距离 */
+  right: 10px; /* 距离右侧的距离 */
+  z-index: 1; /* 确保图标在上方 */
+}
+
+.left-bottom-icon-container {
+  pointer-events: none;
+  transition: all 0.3s ease;
+}
+.el-button {
+  pointer-events: auto;
+}
+
 .content-box {
-  background-color: var( --af-bg-color);
+  background-color: var( --af-bg-color, 0.5);
   margin: 12px 12px;
   border-radius: 12px;
   color: var( --af-bg-color);
@@ -88,28 +116,8 @@ svg {
   }
 }
 
-//.el-container {
-//  padding-top: $title-bar-height;
-//
-//  .el-aside {
-//    width: $title-aside;
-//    //background-color: #21242a;
-//    box-sizing: border-box;
-//  }
-//}
-
 .title-aside {
   width: $title-aside;
   height: $title-bar-height;
   background-color: var( --af-bg-color);
 }
-
-//.el-icon {
-//  svg {
-//    color: #111;
-//  }
-//}
-
-//.el-scrollbar {
-//  padding-right: 20px;
-//}

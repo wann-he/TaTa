@@ -30,29 +30,62 @@
                         </el-col>
                     </el-row>
                     <el-divider></el-divider>
-                    <!--                    <el-row :gutter="24">-->
-                    <!--                        <el-col :span="24">-->
-                    <!--                        </el-col>-->
-                    <!--                        <el-col :span="24">-->
-                    <!--                            <el-form-item label="OpenAI-AK">-->
-                    <!--                                <el-input v-model="api_key" class="m-2" placeholder="ak"-->
-                    <!--                                          size="default"-->
-                    <!--                                          clearable>-->
-                    <!--                                </el-input>-->
-                    <!--                            </el-form-item>-->
-                    <!--                        </el-col>-->
-                    <!--                        <el-col :span="24">-->
-                    <!--                            <el-form-item label="默认模型">-->
-                    <!--                                <el-select v-model="gpt_model" class="m-2" placeholder="选择模型" size="default">-->
-                    <!--                                    <el-option v-for="item in ChatModelOptions" :key="item.value" :label="item.label"-->
-                    <!--                                               :value="item.value"/>-->
-                    <!--                                </el-select>-->
-                    <!--                            </el-form-item>-->
-                    <!--                        </el-col>-->
-                    <!--                        <el-col :span="18"></el-col>-->
-                    <!--                        <el-col :span="6">-->
-                    <!--                        </el-col>-->
-                    <!--                    </el-row>-->
+
+                    <!-- 图片格式转换设置 -->
+                    <div class="section-title">
+                        <el-icon><Picture /></el-icon>
+                        <span>图片格式转换</span>
+                    </div>
+                    <el-row :gutter="24">
+                        <el-col :span="24">
+                            <el-form-item label="转换模式">
+                                <el-radio-group v-model="img_convert_mode">
+                                    <el-radio-button value="native">Rust 原生库</el-radio-button>
+                                    <el-radio-button value="magick">ImageMagick</el-radio-button>
+                                </el-radio-group>
+                                <el-text size="small" type="info" style="margin-left: 12px">
+                                    原生模式打包体积小，格式支持有限；magick 模式需用户自行安装 ImageMagick
+                                </el-text>
+                            </el-form-item>
+                        </el-col>
+                    </el-row>
+                    <el-row :gutter="24" v-if="img_convert_mode === 'magick'">
+                        <el-col :span="24">
+                            <el-form-item label="magick 路径">
+                                <el-input v-model="magick_path" placeholder="留空则从系统 PATH 中查找 magick"
+                                          size="default" clearable>
+                                    <template #append>
+                                        <el-button @click="selectMagickPath">选择</el-button>
+                                    </template>
+                                </el-input>
+                            </el-form-item>
+                        </el-col>
+                        <el-col :span="24">
+                            <el-form-item label=" ">
+                                <el-button type="primary" @click="testMagick" :loading="testing">
+                                    <el-icon><CircleCheck /></el-icon> 测试是否可用
+                                </el-button>
+                                <el-tag v-if="testResult === 'ok'" type="success" style="margin-left: 12px">
+                                    <el-icon><CircleCheckFilled /></el-icon> 检测通过：{{ magickVersion }}
+                                </el-tag>
+                                <el-tag v-else-if="testResult === 'fail'" type="danger" style="margin-left: 12px">
+                                    <el-icon><CircleCloseFilled /></el-icon> 未检测到 magick
+                                </el-tag>
+                            </el-form-item>
+                        </el-col>
+                        <el-col :span="24" v-if="testResult === 'fail'">
+                            <el-alert type="warning" :closable="false" show-icon>
+                                <template #title>未在系统中找到 ImageMagick</template>
+                                <div style="margin-top: 4px">
+                                    请前往
+                                    <el-link type="primary" href="https://imagemagick.org/download/#gsc.tab=0" target="_blank">
+                                        ImageMagick 官方下载页
+                                    </el-link>
+                                    下载并安装 Windows 版本，安装时请勾选「Add application directory to your system path」或在上方手动指定 magick.exe 路径。
+                                </div>
+                            </el-alert>
+                        </el-col>
+                    </el-row>
                 </el-form>
 
             </el-space>
@@ -66,6 +99,9 @@ import type {TabsPaneContext} from 'element-plus'
 import {ElMessage} from 'element-plus'
 import {ChatModelVal, MultipleVal, QwenModelOptions, QwenModelVal} from "../script/constants";
 import {readConfig, setConfig, UserConf} from "../script/settings";
+import {invoke} from '@tauri-apps/api/core'
+import {open} from '@tauri-apps/plugin-dialog'
+import type {ConvertMode} from '../script/imageFormats'
 
 
 const checked1 = ref(false)
@@ -100,6 +136,13 @@ const models = ref([''])
 const QWEN_OPTIONAL_MODELS = ref([''])
 const qwen_models = ref([''])
 
+// 图片转换相关
+const img_convert_mode = ref<ConvertMode>('native')
+const magick_path = ref('')
+const testing = ref(false)
+const testResult = ref<'ok' | 'fail' | null>(null)
+const magickVersion = ref('')
+
 
 readConfig().then((conf) => {
     api_key.value = conf.gpt.ak
@@ -107,6 +150,8 @@ readConfig().then((conf) => {
     qwen_api_key.value = conf.qwen.ak
     qwen_models.value = conf.qwen.models
     QWEN_OPTIONAL_MODELS.value = conf.qwen.optional_models
+    img_convert_mode.value = conf.img_convert?.mode || 'native'
+    magick_path.value = conf.img_convert?.magick_path || ''
 })
 
 const saveSetting = () => {
@@ -130,6 +175,10 @@ const saveSetting = () => {
             ak: qwen_api_key.value,
             models: uniqueQwenModels,
             optional_models: uniqueOptionalModels
+        },
+        img_convert: {
+            mode: img_convert_mode.value,
+            magick_path: magick_path.value
         }
     };
     setConfig(conf).then((conf) => {
@@ -138,11 +187,47 @@ const saveSetting = () => {
         qwen_api_key.value = conf.qwen.ak
         qwen_models.value = conf.qwen.models
         QWEN_OPTIONAL_MODELS.value = conf.qwen.optional_models
+        img_convert_mode.value = conf.img_convert.mode
+        magick_path.value = conf.img_convert.magick_path
         ElMessage({
-            message: conf,
+            message: '保存成功',
             type: 'success'
         })
     });
+}
+
+async function selectMagickPath() {
+    const selected = await open({
+        multiple: false,
+        filters: [{name: 'ImageMagick', extensions: ['exe']}]
+    })
+    if (typeof selected === 'string') {
+        magick_path.value = selected
+    }
+}
+
+async function testMagick() {
+    testing.value = true
+    testResult.value = null
+    try {
+        const result = await invoke<{ available: boolean; version: string; path: string }>('check_magick_available', {
+            magickPath: magick_path.value || null
+        })
+        if (result.available) {
+            testResult.value = 'ok'
+            magickVersion.value = result.version
+            ElMessage.success('ImageMagick 可用')
+        } else {
+            testResult.value = 'fail'
+            ElMessage.warning('检测失败：' + result.version)
+        }
+    } catch (e: any) {
+        testResult.value = 'fail'
+        console.error(e)
+        ElMessage.warning('检测失败：' + (e?.message || e))
+    } finally {
+        testing.value = false
+    }
 }
 
 
@@ -150,7 +235,7 @@ const saveSetting = () => {
 document.oncontextmenu = function () {
     // false为禁止
     // return false
-    return true
+    return false
 }
 </script>
 
@@ -198,6 +283,16 @@ document.oncontextmenu = function () {
     display: list-item;
     align-items: center;
     padding: 5px 15px;
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    font-size: 15px;
+    margin-bottom: 8px;
+    color: var(--el-text-color-primary);
 }
 
 %btn {

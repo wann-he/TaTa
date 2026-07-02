@@ -27,3 +27,6 @@ realesrgan
 ffmpeg
 .cosine
 /src-tauri/src-tauri_bin&models.zip
+/src-tauri/models-srmd/**
+/src-tauri/models/**
+/src-tauri/bin/srmd/**

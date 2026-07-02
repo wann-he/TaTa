@@ -1,6 +1,6 @@
 import {Result} from "./filetools";
 import {Videoo} from "./mp4ToImg";
-import {Command} from "@tauri-apps/api/shell";
+import {Command} from "@tauri-apps/plugin-shell";
 
 
 export interface MediaConfig {
@@ -9,6 +9,8 @@ export interface MediaConfig {
     type: number;
     num: number;
     out_path: string;
+    speed: number;
+    use_gpu?: boolean;
 }
 
 //ffmpeg -i input.mp4 -vn -c:a flac output.flac
@@ -22,7 +24,7 @@ export async function video2Audio(mediaConf: MediaConfig, medias: Videoo[]): Pro
         for (const vd of entries) {
             console.log(`Entry-path: ${vd.path};filename:${vd.name}`);
 
-            let command: Command = Command.sidecar("bin/ffmpeg/ffmpeg", []);
+            let command = Command.sidecar("bin/ffmpeg/ffmpeg", []);
             if (mediaConf.audio_scheme == 'flac') {
                 //ffmpeg -i input.mp4 -vn -c:a flac output.flac
                 command = Command.sidecar("bin/ffmpeg/ffmpeg",
@@ -73,39 +75,48 @@ export async function video2Audio(mediaConf: MediaConfig, medias: Videoo[]): Pro
 }
 
 //ffmpeg -i video.mp4 -i audio.aac -c:v copy -c:a aac -map 0:v:0 -map 1:a:0 output.mp4
+// useGpu
 
 export async function convert(mediaConf: MediaConfig, medias: Videoo[]): Promise<Result> {
     console.log('============ 开始视频格式转换 ============')
     const out_path = mediaConf.out_path;
     let failedNum = 0;
-
+    let codingMode = mediaConf.use_gpu ? 'hevc_nvenc' : 'libx264';
     for (const vd of medias) {
         console.log('basename =====> ' + vd.name)
         console.log('path =====> ' + vd.path)
         console.log('url =====> ' + vd.url)
-        let command: Command;
+        const parts = vd.name.split('.');
+        const filename = parts.slice(0, -1).join('.'); // 获取除最后一个部分外的所有部分作为文件名
+
+        let command;
+
+        // ffmpeg -i .\p01.mp4 -vf "setpts=PTS/(1.5)" -af "atempo=1.5" -c:v libx264 -preset fast -crf 23 -c:a aac -b:a 128k p01x1.5_2.mp4
+        let args: string | string[];
         if (vd.bitrate) {
-            command = Command.sidecar("bin/ffmpeg/ffmpeg",
-                ['-y',
-                    '-i', vd.path,
-                    '-c:v', vd.codingMode || 'libx264',
-                    '-b:v', vd.bitrate,
-                    '-c:a', 'aac',
-                    '-b:a', '128k',
-                    `${out_path}\\${vd.name}${vd.suffix}.${mediaConf.out_video_scheme}`]
-                , {encoding: 'utf8'});
+            args = ['-y',
+                '-i', vd.path,
+                '-c:v', codingMode,
+                '-b:v', vd.bitrate,
+                '-c:a', 'aac',
+                '-b:a', '128k',
+                `${out_path}\\${filename}${vd.suffix}.${mediaConf.out_video_scheme}`]
         } else {
-            command = Command.sidecar("bin/ffmpeg/ffmpeg",
-                ['-y',
-                    '-i', vd.path,
-                    '-c:v', vd.codingMode || 'libx264',
-                    '-preset', 'medium',
-                    '-crf', '23',
-                    '-c:a', 'aac',
-                    '-b:a', '128k',
-                    `${out_path}\\${vd.name}${vd.suffix}.${mediaConf.out_video_scheme}`]
-                , {encoding: 'utf8'});
+            args = ['-y',
+                '-i', vd.path,
+                '-c:v', codingMode,
+                '-preset', 'medium',
+                '-crf', '23',
+                '-c:a', 'aac',
+                '-b:a', '128k',
+                `${out_path}\\${filename}${vd.suffix}.${mediaConf.out_video_scheme}`]
         }
+        if (mediaConf.speed !== 1) {
+            const speedArg = ['-vf', "setpts=PTS/(" + mediaConf.speed + ")", '-af', "atempo=" + mediaConf.speed]
+            args.splice(3, 0, ...speedArg);
+
+        }
+        command = Command.sidecar("bin/ffmpeg/ffmpeg", args, {encoding: 'utf8'});
         // ffmpeg -y -i "i.mov" -c:v libx264 -preset medium -crf 23 -c:a aac -b:a 128k "o.mp4"
         console.log(command)
 
@@ -135,7 +146,7 @@ export async function executeCustomCommand(custom_command: string): Promise<Resu
         .replaceAll('"', '')
         .replaceAll('\'', '')
         .trimStart().trimEnd().split(' ');
-    let command: Command = Command.sidecar("bin/ffmpeg/ffmpeg", args
+    let command = Command.sidecar("bin/ffmpeg/ffmpeg", args
         , {encoding: 'utf8'});
     console.log(command)
 
@@ -147,4 +158,28 @@ export async function executeCustomCommand(custom_command: string): Promise<Resu
     console.log('output ==> ', output)
     console.log('============ 自定义命令执行完成 ============')
     return {rcode: output.code == undefined ? -1 : output.code, failedNum: 0, data: output.stderr};
+}
+
+
+export async function executeCustomCommand_2(custom_command: string): Promise<Result> {
+    console.log('============ 开始执行自定义命令 ============')
+    // const _command: string = custom_command.split(' ')[0];
+    const _cmd = '/c ' + custom_command;
+    const args: string[] = _cmd
+        .replaceAll('"', '')
+        .replaceAll('\'', '')
+        .trimStart().trimEnd().split(' ')
+     let command = Command.create('cmd-c', args
+        , {encoding: 'utf8'});
+    console.log(command)
+
+    command.on('close', () => console.log('任务完成 -> execute_custom_command'))
+    command.on('error', error => console.error(`command error: "${error}"`));
+    command.stdout.on('data', line => console.log(`command stdout: "${line}"`));
+    command.stderr.on('data', (line) => console.log(`command stderr: "${line}"`))
+    const output = await command.execute()
+    console.log('output ==> ', output)
+    console.log('============ 自定义命令执行完成 ============')
+    return {rcode: output.code == undefined ? -1 : output.code, failedNum: 0, data: output.stderr};
+
 }

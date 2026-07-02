@@ -29,7 +29,7 @@
 import {defineComponent, PropType} from 'vue';
 import {ElCard} from 'element-plus';
 import {Stamp} from "@element-plus/icons-vue";
-import {convertFileSrc} from "@tauri-apps/api/tauri";
+import {convertFileSrc} from "@tauri-apps/api/core";
 import {getVideoInfo} from "../script/mp4ToImg";
 
 export interface MediaInfo {

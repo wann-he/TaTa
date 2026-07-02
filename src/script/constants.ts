@@ -1,6 +1,6 @@
 import {ref} from "vue";
 
-export const ModelVal = ref<'realesrgan-x4plus' | 'reaesrnet-x4plus' | 'realesrgan-x4plus-anime' | 'realesr-animevideov3'>('realesrgan-x4plus')
+export const ModelVal = ref<'realesrgan-x4plus' | 'reaesrnet-x4plus' | 'realesrgan-x4plus-anime' | 'realesr-animevideov3' | 'srmd'>('realesrgan-x4plus')
 export const ChatModelVal = ref<'gpt-3.5-turbo-1106' | 'gpt-4o-mini'>('gpt-3.5-turbo-1106')
 export const QwenModelVal = ref<'qwen-max' | 'qwen-plus' | 'qwen-turbo'>('qwen-turbo')
 export const ReplaceTypeVal = ref<1 | 2 | 3 | 4>()
@@ -22,11 +22,11 @@ export const MultipleOptions = [
 export const ModelOptions = [
     {
         value: 'realesrgan-x4plus',
-        label: 'realesrgan-x4plus(默认)',
+        label: 'realesrgan-x4plus(通用)',
     },
     {
-        value: 'reaesrnet-x4plus',
-        label: 'reaesrnet-x4plus',
+        value: 'realesrnet-x4plus',
+        label: 'realesrnet-x4plus',
     },
     {
         value: 'realesrgan-x4plus-anime',
@@ -35,6 +35,10 @@ export const ModelOptions = [
     {
         value: 'realesr-animevideov3',
         label: 'realesr-animevideov3(动漫视频)',
+    },
+    {
+        value: 'srmd',
+        label: 'srmd(老照片修复)',
     },
 ]
 
@@ -90,7 +94,14 @@ export const ReplaceTypeOptions = [
     }
     , {
         value: 7,
-        label: '添加后缀',
+        label: '添加后缀(不改变文件后缀名)',
+    }
+    , {
+        value: 8,
+        label: '替换第m ~ n个字符',
+    }, {
+        value: 9,
+        label: '在第x个字符后插入',
     }
 ]
 
@@ -103,4 +114,22 @@ export const CodingModeOptions = [
         value: 'libx264',
         label: 'CPU编码',
     },
+]
+
+export const ScaleDefaultOptions = [
+    {
+        value: 2,
+        label: '2倍',
+        disabled: true
+    },
+    {
+        value: 3,
+        label: '3倍',
+        disabled: true
+    },
+    {
+        value: 4,
+        label: '4倍',
+        disabled: false
+    }
 ]

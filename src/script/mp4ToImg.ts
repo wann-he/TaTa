@@ -1,8 +1,9 @@
-import {createDir, exists, readDir} from '@tauri-apps/api/fs'
-import {Command} from '@tauri-apps/api/shell'
+import {mkdir, exists, readDir} from '@tauri-apps/plugin-fs'
+import {Command} from '@tauri-apps/plugin-shell'
 import {basename, parse} from 'pathe'
-import {convertFileSrc} from "@tauri-apps/api/tauri";
+import {convertFileSrc} from "@tauri-apps/api/core";
 import {path} from "@tauri-apps/api";
+import {resolveResource} from "@tauri-apps/api/path";
 import {Result} from "./filetools";
 
 export interface Image {
@@ -42,6 +43,7 @@ export interface MConfig {
     outpath?: string; // 图片输出路径|临时文件存放路径
     prefix?: string; // 图片名前缀
     suffix?: string; // 图片名后缀
+    is_video_job?: boolean; // 是否是视频任务
 }
 
 export const TMP_IMG_DIR = "tmp_img";
@@ -71,7 +73,7 @@ export async function video2Img(basePath: string, vd: Videoo): Promise<Result> {
     const tmp_out_path = await path.join(basePath, TMP_IMG_DIR, 'frame%08d.png')
 
     await readDir(tmp_dir).catch(() => {
-        createDir(tmp_dir)
+        mkdir(tmp_dir)
     })
     // 记录视频文件的基本信息
     console.log('name : %s ,path : %s ,url : %s', vd.name, vd.path, vd.url)
@@ -130,7 +132,7 @@ async function getImages(fileDir: string): Promise<Image[]> {
     const imgArr: Image[] = []
     entries.forEach(file => {
         if (file.name != null) {
-            imgArr.push({url: convertFileSrc(`${file.path}`), percentage: 0, name: `${file.path}`})
+            imgArr.push({url: convertFileSrc(`${file.name}`), percentage: 0, name: `${file.name}`})
         }
     });
     return imgArr;
@@ -177,6 +179,7 @@ export async function merge2Video(imgPath: string, outPath: string, vd: Videoo):
 
 
 // ./realesrgan-ncnn-vulkan.exe -i input.jpg -o output.png
+// srmd-ncnn-vulkan.exe -i input.jpg -o output.png -n 3 -s 2 -m models-srmd
 export async function imgTo4k(mconfig: MConfig, basePath: string, img: Image): Promise<{ rcode: number | null }> {
     const o_path = mconfig.outpath || '';
     const img_prefix = mconfig.prefix || '';
@@ -184,14 +187,27 @@ export async function imgTo4k(mconfig: MConfig, basePath: string, img: Image): P
     const out_path = await path.join(basePath, o_path);
 
     await readDir(out_path).catch(() => {
-        createDir(out_path)
+        mkdir(out_path)
     })
 
     console.log(mconfig)
     const filename = basename(img.name);
-    const command = Command.sidecar("bin/realesrgan/realesrgan-ncnn-vulkan",
-        ['-i', img.name, '-o', `${out_path}\\${img_prefix}${filename}`, '-n', mconfig.model, '-s', mconfig.outscale + '', '-v'],
-        {encoding: 'utf8'});
+
+    const tmp_file_path = mconfig.is_video_job ?  await path.join(basePath, TMP_IMG_DIR, img.name) : img.name;
+
+    let command;
+    
+    if (mconfig.model === 'srmd') {
+        const modelPath = await resolveResource('models-srmd');
+        command = Command.sidecar("bin/srmd/srmd-ncnn-vulkan",
+            ['-i', tmp_file_path, '-o', `${out_path}\\${img_prefix}${filename}`, '-n', '3', '-s', mconfig.outscale + '', '-m', modelPath, '-v'],
+            {encoding: 'utf8'});
+    } else {
+        command = Command.sidecar("bin/realesrgan/realesrgan-ncnn-vulkan",
+            ['-i', tmp_file_path, '-o', `${out_path}\\${img_prefix}${filename}`, '-n', mconfig.model, '-s', mconfig.outscale + '', '-v'],
+            {encoding: 'utf8'});
+    }
+    
     console.log(command)
     command.on('close', () => {
         console.log('任务完成 -> imgTo4k')
@@ -222,7 +238,7 @@ export async function imgTo4k(mconfig: MConfig, basePath: string, img: Image): P
             img.percentage = Number(line.replace("%", ""));
             console.log(img.percentage)
         }
-        const regExp = /\S+\s->\s\S+\sdone/;
+        const regExp = /done$/;
         const match: boolean = regExp.test(line);
         if (match) {
             img.percentage = 100;

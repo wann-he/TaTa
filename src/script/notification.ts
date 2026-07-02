@@ -1,4 +1,4 @@
-import {isPermissionGranted, requestPermission, sendNotification} from '@tauri-apps/api/notification';
+import {isPermissionGranted, requestPermission, sendNotification} from '@tauri-apps/plugin-notification';
 
 
 export async function sendNotify(msg: string) {

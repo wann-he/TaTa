@@ -1,146 +1,97 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/schema.json",
   "build": {
-    "beforeBuildCommand": "yarn build",
-    "beforeDevCommand": "yarn dev",
-    "devPath": "http://localhost:5173",
-    "distDir": "../dist",
-    "withGlobalTauri" : true
+    "beforeBuildCommand": "npm run build",
+    "beforeDevCommand": "npm run dev",
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:5173"
   },
-  "package": {
-    "productName": "TaTa",
-    "version": "0.0.3"
-  },
-  "tauri": {
-    "allowlist": {
-      "all": true,
-      "shell": {
-        "all": true,
-        "sidecar": true,
-        "execute": true,
-        "open": "",
-        "scope": [
-          {
-            "name": "bin/ffmpeg/ffmpeg",
-            "args": true,
-            "sidecar": true
-          },
-          {
-            "name": "bin/ffmpeg/ffprobe",
-            "args": true,
-            "sidecar": true
-          },
-          {
-            "name": "bin/realesrgan/realesrgan-ncnn-vulkan",
-            "args": true,
-            "sidecar": true
-          }
-        ]
-      },
-      "protocol": {
-        "asset": true,
-        "assetScope": [
-          "*"
-        ]
-      },
-      "fs": {
-        "scope": [
-          "$RESOURCE/*",
-          "C:/**/*",
-          "D:/**/*",
-          "E:/**/*",
-          "F:/**/*"
-        ],
-        "all": true,
-        "readFile": true,
-        "writeFile": true,
-        "readDir": true,
-        "copyFile": true,
-        "createDir": true,
-        "removeDir": true,
-        "removeFile": true,
-        "renameFile": true,
-        "exists": true
-      },
-      "notification": {
-        "all": true
-      },
-      "http": {
-        "all": true,
-        "scope": [
-          "http://**",
-          "https://**"
+  "bundle": {
+    "active": true,
+    "category": "DeveloperTool",
+    "copyright": "",
+    "targets": "all",
+    "externalBin": [
+      "bin/ffmpeg/ffmpeg",
+      "bin/ffmpeg/ffprobe",
+      "bin/realesrgan/realesrgan-ncnn-vulkan",
+      "bin/srmd/srmd-ncnn-vulkan"
+    ],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "windows": {
+      "certificateThumbprint": null,
+      "digestAlgorithm": "sha256",
+      "timestampUrl": "",
+      "wix": {
+        "language": [
+          "zh-CN"
         ]
       }
     },
-    "bundle": {
-      "active": true,
-      "category": "DeveloperTool",
-      "copyright": "",
+    "longDescription": "",
+    "macOS": {
+      "entitlements": null,
+      "exceptionDomain": "",
+      "frameworks": [],
+      "providerShortName": null,
+      "signingIdentity": null
+    },
+    "resources": [
+      "bin",
+      "models",
+      "models-srmd",
+      "conf"
+    ],
+    "shortDescription": "",
+    "linux": {
       "deb": {
         "depends": []
-      },
-      "externalBin": [
-        "bin/ffmpeg/ffmpeg",
-        "bin/ffmpeg/ffprobe",
-        "bin/realesrgan/realesrgan-ncnn-vulkan"
-      ],
-      "icon": [
-        "icons/32x32.png",
-        "icons/128x128.png",
-        "icons/128x128@2x.png",
-        "icons/icon.icns",
-        "icons/icon.ico"
-      ],
-      "identifier": "com.minority.dev",
-      "longDescription": "",
-      "macOS": {
-        "entitlements": null,
-        "exceptionDomain": "",
-        "frameworks": [],
-        "providerShortName": null,
-        "signingIdentity": null
-      },
-      "resources": [
-        "bin",
-        "models",
-        "conf"
-      ],
-      "shortDescription": "",
-      "targets": "all",
-      "windows": {
-        "certificateThumbprint": null,
-        "digestAlgorithm": "sha256",
-        "timestampUrl": "",
-        "wix": {
-          "language": [
-            "zh-CN"
-          ]
-        }
       }
-    },
-    "security": {
-      "csp": "default-src: 'self'; media-src 'self' asset:"
-    },
-    "updater": {
-      "active": false
-    },
+    }
+  },
+  "productName": "TaTa",
+  "mainBinaryName": "TaTa",
+  "version": "0.0.10",
+  "identifier": "com.minority.dev",
+  "plugins": {
+    "shell": {
+      "open" : "*"
+    }
+  },
+  "app": {
+    "withGlobalTauri": true,
     "windows": [
       {
         "fullscreen": false,
-        "height": 750,
         "resizable": true,
-        "title": "TaTaRepair",
+        "title": "TaTa",
+        "height": 768,
         "width": 1000,
+        "transparent": false,
         "decorations": false,
         "minWidth": 800,
-        "minHeight": 500,
+        "minHeight": 512,
+        "shadow": true,
+        "visible": true,
         "center": true,
-        "transparent": true
+        "dragDropEnabled": false,
+        "useHttpsScheme": true
       }
     ],
-    "systemTray": {
-      "iconPath": "icons/icon.ico"
+    "security": {
+      "assetProtocol": {
+        "scope": [
+          "*"
+        ],
+        "enable": true
+      },
+      "csp": "default-src: 'self'; media-src 'self' asset:; connect-src ipc: http://ipc.localhost"
     }
   }
 }

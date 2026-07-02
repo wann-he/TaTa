@@ -1,7 +1,8 @@
-import { appWindow } from '@tauri-apps/api/window'
+import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { Ref } from 'vue'
 import { pids } from '../store'
-import { Command } from '@tauri-apps/api/shell'
+import { Command } from '@tauri-apps/plugin-shell'
+const appWindow = getCurrentWebviewWindow()
 
 export function minimize() {
     appWindow.minimize()

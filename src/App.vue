@@ -1,12 +1,19 @@
 <template>
+    <!--    <el-watermark :font="font" :rotate="-25"-->
+    <!--                  :gap="[225,225]" :offset="[125,125]" :content="waterMark">-->
+    <!--    </el-watermark>-->
     <el-menu
         data-tauri-drag-region
         mode="horizontal"
         :ellipsis="false"
         @select="select"
     >
-        <el-menu-item index="0">
+        <el-menu-item index="0" :disabled="true">
+            <el-text size="medium" type="info" style="opacity: 0.5;">
+                {{ waterMark }}
+            </el-text>
         </el-menu-item>
+
         <el-menu-item index="1" @click="toggleDark()">
             <div class="titlebar-button" id="titlebar-setting">
                 <svg t="1724327384948" class="icon" viewBox="0 0 1024 1024" p-id="3202"
@@ -17,18 +24,7 @@
                 </svg>
             </div>
         </el-menu-item>
-        <el-menu-item index="2" @click="select('setting')">
-            <div class="titlebar-button" id="titlebar-setting" :class="{ selected: currentSelected === 'setting' }"
-            >
-                <svg t="1724235288239" class="icon" viewBox="0 0 1024 1024" p-id="1582"
-                     width="18" height="18">
-                    <path
-                        d="M337.333 517.667c77.406 0 141.974 54.967 156.8 127.998l440.534 0.002c17.673 0 32 14.327 32 32 0 17.496-14.042 31.713-31.471 31.995l-0.53 0.005-440.534 0.001C479.307 782.7 414.74 837.667 337.333 837.667S195.36 782.699 180.534 709.668l-99.2-0.001c-17.674 0-32-14.327-32-32 0-17.497 14.041-31.713 31.47-31.996l0.53-0.004 99.2-0.002c14.825-73.03 79.393-127.998 156.8-127.998z m0 64c-53.019 0-96 42.98-96 96 0 53.019 42.981 96 96 96 53.02 0 96-42.981 96-96 0-53.02-42.98-96-96-96z m341.334-405.334c77.406 0 141.974 54.968 156.799 127.999l99.2 0.001c17.674 0 32 14.327 32 32 0 17.497-14.041 31.713-31.47 31.996l-0.53 0.004-99.2 0.003c-14.826 73.03-79.394 127.997-156.8 127.997-77.405 0-141.973-54.967-156.798-127.997l-440.535-0.003c-17.673 0-32-14.327-32-32 0-17.496 14.042-31.713 31.471-31.995l0.53-0.005 440.534-0.001c14.825-73.031 79.393-127.999 156.799-127.999z m0 64c-53.02 0-96 42.981-96 96 0 53.02 42.98 96 96 96 53.019 0 96-42.98 96-96 0-53.019-42.981-96-96-96z"
-                        p-id="1583"></path>
-                </svg>
-            </div>
-        </el-menu-item>
-        <el-menu-item index="3" @click="minimize">
+        <el-menu-item index="2" @click="minimize">
             <div class="titlebar-button" id="titlebar-minimize">
                 <svg t="1660786003641" class="icon" viewBox="0 0 1024 1024" p-id="2149"
                      width="18" height="18">
@@ -38,7 +34,7 @@
                 </svg>
             </div>
         </el-menu-item>
-        <el-menu-item index="4" @click="toggleMaximize">
+        <el-menu-item index="3" @click="toggleMaximize">
             <div class="titlebar-button" id="titlebar-maximize">
                 <svg t="1660816503973" class="icon" viewBox="0 0 1024 1024"
                      p-id="6853"
@@ -60,77 +56,114 @@
             </div>
         </el-menu-item>
     </el-menu>
-
     <el-container>
-
+        <!--        <div>-->
         <el-menu
+            mode="vertical"
             :ellipsis="false"
+            class="custom-vertical-menu"
             @select="select"
+            style="height: 100%"
+            :collapse="isCollapse"
         >
-            <el-menu-item index="0">
-                <div class="box title" :class="{ selected: currentSelected === 'pic' }" @click="select('pic')">
+            <div class="top-aligned">
+                <el-menu-item index="0" @click="select('pic')">
+                    <!--                        <div class="box title" :class="{ selected: currentSelected === 'pic' }" @click="select('pic')">-->
                     <el-icon>
                         <Picture/>
                     </el-icon>
-                    <span class="title-content">图片修复</span>
-                </div>
-            </el-menu-item>
-            <el-menu-item index="1">
-                <div class="box title" :class="{ selected: currentSelected === 'video' }" @click="select('video')">
+                    <template #title>图片修复</template>
+                    <!--                        </div>-->
+                </el-menu-item>
+                <el-menu-item index="1" @click="select('video')">
                     <el-icon>
                         <VideoCamera/>
                     </el-icon>
-                    <span class="title-content">视频转4K</span>
-                </div>
-            </el-menu-item>
-            <el-menu-item index="2">
-                <div class="box title" :class="{ selected: currentSelected === 'file' }" @click="select('file')">
+                    <template #title>视频转4K</template>
+                </el-menu-item>
+                <el-menu-item index="2" @click="select('file')">
                     <el-icon>
                         <Folder/>
                     </el-icon>
-                    <span class="title-content">文件小工具</span>
-                </div>
-            </el-menu-item>
-            <el-menu-item index="3">
-                <div class="box title" :class="{ selected: currentSelected === 'media' }" @click="select('media')">
+                    <template #title>文件小工具</template>
+                </el-menu-item>
+
+                <el-menu-item index="3" @click="select('media')">
                     <el-icon>
                         <Film/>
                     </el-icon>
-                    <span class="title-content">音视频工具</span>
-                </div>
-            </el-menu-item>
-        </el-menu>
+                    <template #title>音视频工具</template>
+                </el-menu-item>
 
-        <el-main>
+                <el-menu-item index="5" @click="select('img-convert')">
+                    <el-icon>
+                        <Switch/>
+                    </el-icon>
+                    <template #title>图片格式转换</template>
+                </el-menu-item>
+
+            </div>
+            <div class="bottom-aligned">
+                <el-menu-item index="4" @click="select('setting')">
+                    <el-icon>
+                        <svg  xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024"><path fill="currentColor" d="M600.704 64a32 32 0 0 1 30.464 22.208l35.2 109.376c14.784 7.232 28.928 15.36 42.432 24.512l112.384-24.192a32 32 0 0 1 34.432 15.36L944.32 364.8a32 32 0 0 1-4.032 37.504l-77.12 85.12a357 357 0 0 1 0 49.024l77.12 85.248a32 32 0 0 1 4.032 37.504l-88.704 153.6a32 32 0 0 1-34.432 15.296L708.8 803.904c-13.44 9.088-27.648 17.28-42.368 24.512l-35.264 109.376A32 32 0 0 1 600.704 960H423.296a32 32 0 0 1-30.464-22.208L357.696 828.48a352 352 0 0 1-42.56-24.64l-112.32 24.256a32 32 0 0 1-34.432-15.36L79.68 659.2a32 32 0 0 1 4.032-37.504l77.12-85.248a357 357 0 0 1 0-48.896l-77.12-85.248A32 32 0 0 1 79.68 364.8l88.704-153.6a32 32 0 0 1 34.432-15.296l112.32 24.256c13.568-9.152 27.776-17.408 42.56-24.64l35.2-109.312A32 32 0 0 1 423.232 64H600.64zm-23.424 64H446.72l-36.352 113.088-24.512 11.968a294 294 0 0 0-34.816 20.096l-22.656 15.36-116.224-25.088-65.28 113.152 79.68 88.192-1.92 27.136a293 293 0 0 0 0 40.192l1.92 27.136-79.808 88.192 65.344 113.152 116.224-25.024 22.656 15.296a294 294 0 0 0 34.816 20.096l24.512 11.968L446.72 896h130.688l36.48-113.152 24.448-11.904a288 288 0 0 0 34.752-20.096l22.592-15.296 116.288 25.024 65.28-113.152-79.744-88.192 1.92-27.136a293 293 0 0 0 0-40.256l-1.92-27.136 79.808-88.128-65.344-113.152-116.288 24.96-22.592-15.232a288 288 0 0 0-34.752-20.096l-24.448-11.904L577.344 128zM512 320a192 192 0 1 1 0 384 192 192 0 0 1 0-384m0 64a128 128 0 1 0 0 256 128 128 0 0 0 0-256"></path></svg>
+                    </el-icon>
+                    <template #title>设置</template>
+                </el-menu-item>
+            </div>
+        </el-menu>
+        <el-main style="position: relative;">
+
             <router-view v-slot="{ Component }">
                 <KeepAlive>
                     <component :is="Component"></component>
                 </KeepAlive>
             </router-view>
+
+            <!-- 固定定位的按钮 -->
+            <div class="left-bottom-icon-container"
+                 style="position: absolute;bottom: 0px;left: 0px;z-index: 1000;">
+                <el-button @click="changeCollapse" text size="large">
+                    <el-icon>
+                        <Expand v-if="isCollapse"/>
+                        <Fold v-if="!isCollapse"/>
+                    </el-icon>
+                </el-button>
+            </div>
         </el-main>
-
     </el-container>
-
 </template>
 
 <script setup lang="ts">
-import {ref} from 'vue'
+import {reactive, ref} from 'vue'
 import {closeApp, minimize} from './system'
-import {appWindow} from '@tauri-apps/api/window'
+import {getCurrentWebviewWindow} from '@tauri-apps/api/webviewWindow'
 import {useRouter} from 'vue-router'
 import {useDark, useToggle} from '@vueuse/core'
+import {getName, getVersion} from "@tauri-apps/api/app";
+const appWindow = getCurrentWebviewWindow()
 
 
 const isDark = useDark()
 const toggleDark = useToggle(isDark)
 const router = useRouter()
 
+const appName = ref('')
+const version = ref('')
+const waterMark = ref('')
 
 const currentSelected = ref('pic')
+const font = reactive({
+    color: 'rgba(0, 0, 0, .15)',
+})
+const isCollapse = ref(false);
 
 /** 初始化时要做的事情 */
 async function init() {
     useToggle(true)
+    version.value = await getVersion();
+    appName.value = await getName();
+    waterMark.value = appName.value + ' V' + version.value
 }
 
 
@@ -175,12 +208,20 @@ document.oncontextmenu = function () {
     // return true
 }
 
+function changeCollapse() {
+    isCollapse.value = !isCollapse.value;
+}
+
 function toggleMaximize() {
     appWindow.toggleMaximize()
     isMax.value = !isMax.value
 }
 
-function select(type: 'pic' | 'video' | 'file' | 'media' | 'setting') {
+function go2ImgConvert() {
+    router.push({path: '/img-convert', replace: false})
+}
+
+function select(type: 'pic' | 'video' | 'file' | 'media' | 'setting' | 'img-convert') {
     currentSelected.value = type;
     switch (type) {
         case 'pic':
@@ -198,6 +239,9 @@ function select(type: 'pic' | 'video' | 'file' | 'media' | 'setting') {
         case 'setting':
             go2Setting();
             break;
+        case 'img-convert':
+            go2ImgConvert();
+            break;
         default:
             break;
     }
@@ -213,6 +257,28 @@ function select(type: 'pic' | 'video' | 'file' | 'media' | 'setting') {
     margin-right: auto;
 }
 
+.custom-vertical-menu {
+    display: flex;
+    flex-direction: column;
+    //justify-content: space-between;
+    height: 100%; /* 设置菜单的高度 */
+    .top-aligned {
+        margin-bottom: auto; /* 使前n项靠上 */
+    }
+
+    .bottom-aligned {
+        margin-top: auto; /* 使后m项靠下 */
+    }
+}
+
+.custom-vertical-menu-item {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    height: 100%; /* 设置菜单的高度 */
+}
+
+
 .box {
     background-color: var(--af-bg-color);
     margin: 0 auto;
@@ -227,7 +293,7 @@ function select(type: 'pic' | 'video' | 'file' | 'media' | 'setting') {
 
 .el-container {
     width: 100vw;
-    height: 90vh;
+    height: 92vh;
     // padding-top: 30px;
 }
 
