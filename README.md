@@ -6,6 +6,7 @@
 [![Tauri](https://img.shields.io/badge/Tauri-v2-orange.svg)](https://tauri.app)
 [![Vue](https://img.shields.io/badge/Vue-3.4-brightgreen.svg)](https://vuejs.org)
 [![Platform](https://img.shields.io/badge/platform-windows-lightgrey.svg)](#下载与安装)
+[![GitHub stars](https://img.shields.io/github/stars/wann-he/TaTa?style=social)](https://github.com/wann-he/TataRepair/stargazers)
 
 本项目在 [mp4To4K-rust](https://github.com/Minori-ty/mp4To4K-rust) 基础上优化再开发，修复了原项目无法使用的问题，并陆续新增了多项功能。如果你觉得这个软件对你有帮助，欢迎 Star 支持。
 
