@@ -311,8 +311,12 @@ async function start() {
     await sendNotify(failedNum > 0 ? '转换完成,' + failedNum + '个失败' : '图片修复成功')
     allDisabled.value = false;
 
-    // 任务完成后删除临时目录
-    await remove(tempDir.value, {recursive: true});
+    // 任务完成后删除临时目录（只有拖拽上传时才创建了临时目录，选文件模式下 tempDir 为空）
+    if (tempDir.value) {
+        await remove(tempDir.value, {recursive: true}).catch((reason) => {
+            console.log(`删除临时目录${tempDir.value}失败：${reason}`)
+        })
+    }
 }
 
 // 禁止右键

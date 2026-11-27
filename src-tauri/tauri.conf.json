@@ -57,7 +57,7 @@
   },
   "productName": "TaTa",
   "mainBinaryName": "TaTa",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "identifier": "com.minority.dev",
   "plugins": {
     "shell": {

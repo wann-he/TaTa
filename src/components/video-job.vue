@@ -354,6 +354,7 @@ async function start() {
         return;
     }
     // 3.
+    let failedNum = 0;
     if (thread.value == 1) {
         console.log('不使用多线程.')
         for (let i = 0; i < imgSize; i++) {
@@ -370,7 +371,13 @@ async function start() {
                 .catch((reason) => {
                     console.log("Error when processing imgTo4k,reason:", reason);
                     imgs[i].status = 'Exception';
+                    failedNum++;
                 });
+        }
+        // 所有帧都放大失败（通常是模型文件缺失），不再继续合并
+        if (failedNum >= imgSize) {
+            await abortUpscale(vvd.value);
+            return
         }
         if (vvd.value && vvd.value.stages) {
             vvd.value.stages[1].progress = 100;
@@ -394,6 +401,7 @@ async function start() {
                     .catch((reason) => {
                         console.log("Error when processing threadPool_imgTo4k,reason:", reason);
                         imgs[i].status = 'Exception';
+                        failedNum++;
                     })
             );
         }
@@ -409,6 +417,11 @@ async function start() {
         threadPool.isDone().then(async () => {
             console.log("All tasks in the thread pool have completed.");
             clearInterval(progressInterval);  // 停止定时器
+            // 所有帧都放大失败（通常是模型文件缺失），不再继续合并
+            if (failedNum >= imgSize) {
+                await abortUpscale(vvd.value);
+                return
+            }
             if (vvd.value && vvd.value.stages) {
                 vvd.value.stages[1].progress = 100;
                 vvd.value.stages[1].status = 'success';
@@ -420,9 +433,38 @@ async function start() {
     return
 }
 
+/** 图像放大全部失败时统一处理：标记阶段失败并提示检查模型文件 */
+async function abortUpscale(video: Videoo) {
+    console.log('图像放大全部失败，终止后续合并')
+    if (video && video.stages && video.stages.length >= 2) {
+        video.stages[1].progress = 100;
+        video.stages[1].status = 'exception';
+    }
+    allDisabled.value = false;
+    // 清理帧提取与放大的临时目录
+    await remove(await path.join(basePath.value, TMP_IMG_DIR), { recursive: true }).catch(() => {
+    })
+    await remove(await path.join(basePath.value, TMP_4K_DIR), { recursive: true }).catch(() => {
+    })
+    await sendNotify(`【${video.name}】图像放大失败，请检查模型文件是否完整`)
+}
+
 async function doMerge(base_path: string, out_path: string, video: Videoo) {
     // 在这执行后续的操作代码。
     const img_path = await path.join(base_path, TMP_4K_DIR)
+
+    // 没有放大后的帧就不执行合并，否则 ffmpeg 只会报找不到 frame%08d.png
+    const frames = await readDir(img_path).catch(() => [])
+    if (frames.length === 0) {
+        console.log(`目录${img_path}中没有放大后的帧，跳过合并`)
+        if (video && video.stages && video.stages.length == 3) {
+            video.stages[2].progress = 100;
+            video.stages[2].status = 'exception';
+        }
+        allDisabled.value = false;
+        await sendNotify(`【${video.name}】图像放大失败，请检查模型文件是否完整`)
+        return
+    }
 
     const mergeRes = await merge2Video(img_path, out_path, video).catch((reason) => {
         console.log("Error when merge2Video,reason:", reason)
@@ -449,7 +491,12 @@ async function doMerge(base_path: string, out_path: string, video: Videoo) {
         console.log(`删除临时文件夹${TMP_4K_DIR}失败：${reason}`)
     })
 
-    await remove(tempDir.value, { recursive: true });
+    // 只有拖拽上传时才创建了临时目录，选文件模式下 tempDir 为空，不能删除
+    if (tempDir.value) {
+        await remove(tempDir.value, { recursive: true }).catch((reason) => {
+            console.log(`删除临时目录${tempDir.value}失败：${reason}`)
+        })
+    }
 
 }
 
